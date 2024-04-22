@@ -1,4 +1,5 @@
 using NuiN.Movement;
+using NuiN.NExtensions;
 using UnityEngine;
 
 public class PlayerMovementInput : MonoBehaviour, IMovementInput
@@ -7,8 +8,6 @@ public class PlayerMovementInput : MonoBehaviour, IMovementInput
     const string MOUSE_Y = "Mouse Y";
     
     Vector2 _rotation;
-
-    [SerializeField] Transform cameraAnchor;
     
     [SerializeField] KeyCode sprintKey = KeyCode.LeftShift;
     [SerializeField] KeyCode jumpKey = KeyCode.Space;
@@ -16,16 +15,12 @@ public class PlayerMovementInput : MonoBehaviour, IMovementInput
     [SerializeField] float lookSensitivity = 20f;
     [Range(0f, 90f)][SerializeField] float yRotationLimit = 88f;
 
+    Quaternion _fullRotation;
+
     void Awake()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = true;
-    }
-
-    void Update()
-    {
-        MainCamera.Cam.transform.position = cameraAnchor.position;
-        cameraAnchor.transform.rotation = MainCamera.Cam.transform.rotation;
     }
 
     bool IMovementInput.ShouldJump()
@@ -38,8 +33,8 @@ public class PlayerMovementInput : MonoBehaviour, IMovementInput
         float x = Input.GetAxisRaw("Horizontal");
         float z = Input.GetAxisRaw("Vertical");
 
-        Vector3 forward = MainCamera.Cam.transform.forward;
-        Vector3 right = MainCamera.Cam.transform.right;
+        Vector3 forward = transform.forward;
+        Vector3 right = transform.right;
 
         forward.y = 0f;
         right.y = 0f;
@@ -61,9 +56,14 @@ public class PlayerMovementInput : MonoBehaviour, IMovementInput
         var yQuat = Quaternion.AngleAxis(_rotation.y, Vector3.left);
 
         Quaternion newRotation = xQuat * yQuat;
-        MainCamera.Cam.transform.rotation = newRotation;
+        _fullRotation = newRotation;
 
         return Quaternion.Euler(0, newRotation.eulerAngles.y, 0);
+    }
+
+    Quaternion IMovementInput.GetHeadRotation()
+    {
+        return _fullRotation;
     }
 
     bool IMovementInput.IsRunning()
@@ -71,5 +71,3 @@ public class PlayerMovementInput : MonoBehaviour, IMovementInput
         return Input.GetKey(sprintKey);
     }
 }
-
-

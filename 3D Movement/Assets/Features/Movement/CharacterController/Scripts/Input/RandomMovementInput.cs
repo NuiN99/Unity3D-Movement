@@ -28,6 +28,11 @@ public class RandomMovementInput : MonoBehaviour, IMovementInput
         return _rotation;
     }
 
+    public Quaternion GetHeadRotation()
+    {
+        return _rotation;
+    }
+
     bool IMovementInput.ShouldJump()
     {
         return RandomUtils.BelowPercent(1f);

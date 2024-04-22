@@ -18,6 +18,11 @@ public class InspectorMovementInput : MonoBehaviour, IMovementInput
         return rotation;
     }
 
+    public Quaternion GetHeadRotation()
+    {
+        return default;
+    }
+
     bool IMovementInput.ShouldJump()
     {
         return jump;
