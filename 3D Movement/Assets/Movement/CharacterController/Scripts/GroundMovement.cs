@@ -8,17 +8,22 @@ namespace NuiN.Movement
         [Header("Dependencies")]
         [SerializeField] Rigidbody rb;
         [SerializeField] SphereCollider feet;
+        [SerializeField] Transform stepCheck;
 
         [Header("Move Speed Settings")]
         [SerializeField] float moveSpeed = 0.375f;
         [SerializeField] float runSpeedMult = 1.5f;
-
         [SerializeField] float maxAirVelocityMagnitude = 6.2f;
-
         [SerializeField] float groundSpeedMult = 1.8f;
         [SerializeField] float groundDrag = 15f;
         [SerializeField] float airDrag = 0.002f;
         [SerializeField] float airNoInputCounteractMult = 0.01f;
+
+        [Header("Step Settings")] 
+        [SerializeField] float stepHeight = 0.2f;
+        [SerializeField] float stepSpeed = 0.15f;
+        [SerializeField] float bottomStepCheckDist = 0.3f;
+        [SerializeField] float topStepCheckDist = 0.4f;
         
         [Header("Rotate Speed Settings")]
         [SerializeField] float walkingRotateSpeed = 99999f;
@@ -36,7 +41,8 @@ namespace NuiN.Movement
         [SerializeField] float groundCheckDist = 0.25f;
         [SerializeField] float slopeCheckDist = 0.25f;
         [SerializeField] float maxSlopeAngle = 45f;
-        
+
+        Vector3 _direction;
         int _curAirJumps;
         bool _grounded;
         bool _jumping;
@@ -56,9 +62,9 @@ namespace NuiN.Movement
 
         void IMovement.Move(IMovementInput input)
         {
-            Vector3 direction = input.GetDirection().With(y: 0);
+            _direction = input.GetDirection().With(y: 0);
 
-            bool inputtingDirection = direction != Vector3.zero;
+            bool inputtingDirection = _direction != Vector3.zero;
 
             bool running = input.IsRunning();
 
@@ -66,7 +72,7 @@ namespace NuiN.Movement
     
             _grounded =  Physics.OverlapSphere(feet.transform.position, feet.radius, groundMask).Length > 0;
 
-            Vector3 moveVector = direction * speed;
+            Vector3 moveVector = _direction * speed;
             Vector3 groundVelocity = rb.velocity.With(y: 0);
             Vector3 nextFrameVelocity = groundVelocity + moveVector;
 
@@ -91,10 +97,11 @@ namespace NuiN.Movement
                 moveVector *= groundSpeedMult;
                 rb.drag = groundDrag;
                 _curAirJumps = 0;
+                //ClimbSteps();
             }
             
             Vector3 bottomOfFeet = feet.transform.position - new Vector3(0, feet.radius, 0);
-            bool onSlope = Physics.Raycast(bottomOfFeet, direction, out RaycastHit slopeHit, slopeCheckDist, groundMask);
+            bool onSlope = Physics.Raycast(bottomOfFeet, _direction, out RaycastHit slopeHit, slopeCheckDist, groundMask);
             if (onSlope)
             {
                 float angle = VectorUtils.DirectionAngle(slopeHit.normal) - 90;
@@ -103,10 +110,24 @@ namespace NuiN.Movement
                     // moving towards slope
                 }
             }
-    
+            
             rb.velocity += moveVector.With(y: 0);
 
-            DrawDebug(bottomOfFeet, direction);
+            DrawDebug(bottomOfFeet);
+        }
+
+        void ClimbSteps()
+        {
+            Vector3 stepCheckBottom = stepCheck.position;
+            Vector3 stepCheckTop = stepCheck.position.Add(y: stepHeight);
+
+            Vector3 direction = rb.velocity.With(y: 0);
+            
+            if (Physics.Raycast(stepCheckBottom, direction, bottomStepCheckDist, groundMask) && 
+                !Physics.Raycast(stepCheckTop, direction, topStepCheckDist, groundMask))
+            {
+                rb.position += Vector3.zero.With(y: stepSpeed);
+            }
         }
 
         void IMovement.Rotate(IMovementInput input)
@@ -153,9 +174,9 @@ namespace NuiN.Movement
             _jumping = false;
         }
 
-        void DrawDebug(Vector3 bottomOfFeet, Vector3 direction)
+        void DrawDebug(Vector3 bottomOfFeet)
         {
-            Debug.DrawRay(bottomOfFeet, direction * slopeCheckDist, Color.yellow);
+            Debug.DrawRay(bottomOfFeet, _direction * slopeCheckDist, Color.yellow);
         }
     }
 }
