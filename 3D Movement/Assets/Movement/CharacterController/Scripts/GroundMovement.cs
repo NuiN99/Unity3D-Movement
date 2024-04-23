@@ -30,7 +30,7 @@ namespace NuiN.Movement
         [SerializeField] float runningRotateSpeed = 99999f;
 
         [Header("Jump Settings")] 
-        [SerializeField] SimpleTimer jumpDelay = new(0.2f);
+        [SerializeField] SimpleTimer jumpDelay = new(0.2f, true);
         [SerializeField] float jumpForce = 6f;
         [SerializeField] int maxAirJumps = 1;
         [SerializeField] float downForceMult = 0.15f;
@@ -38,7 +38,6 @@ namespace NuiN.Movement
 
         [Header("Environment Settings")]
         [SerializeField] LayerMask groundMask;
-        [SerializeField] float groundCheckDist = 0.25f;
         [SerializeField] float slopeCheckDist = 0.25f;
         [SerializeField] float maxSlopeAngle = 45f;
 
