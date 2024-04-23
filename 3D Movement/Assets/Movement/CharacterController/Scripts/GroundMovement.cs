@@ -59,6 +59,7 @@ namespace NuiN.Movement
             Vector3 direction = input.GetDirection().With(y: 0);
 
             bool running = input.IsRunning();
+
             float speed = (running ? moveSpeed * runSpeedMult : moveSpeed);
     
             _grounded = Physics.Raycast(feet.position, -feet.up, out RaycastHit groundHit, groundCheckDist, groundMask);
