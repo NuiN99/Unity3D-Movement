@@ -5,11 +5,8 @@ namespace NuiN.Movement
 {
     public class GroundMovement : MonoBehaviour, IMovement
     {
-        int _curAirJumps;
-        bool _grounded;
-        bool _jumping;
-
-        [Header("Dependencies")] 
+        [Header("Dependencies")]
+        [SerializeField] Rigidbody rb;
         [SerializeField] Transform feet;
 
         [Header("Move Speed Settings")]
@@ -39,7 +36,10 @@ namespace NuiN.Movement
         [SerializeField] float slopeCheckDist = 0.25f;
         //[SerializeField] float maxSlopeAngle = 45f;
 
-        [SerializeField] Rigidbody rb;
+        
+        int _curAirJumps;
+        bool _grounded;
+        bool _jumping;
 
         void Reset()
         {
@@ -74,7 +74,7 @@ namespace NuiN.Movement
                 rb.drag = airDrag;
                 float maxAirVel = running ? maxAirVelocityMagnitude * runSpeedMult : maxAirVelocityMagnitude;
 
-                // only allow movement in a direction that doesnt increase players forward velocity past the max air vel
+                // only allow movement in a direction that doesnt increase forward velocity past the max air vel
                 if (nextFrameVelocity.magnitude >= maxAirVel && nextFrameVelocity.magnitude >= groundVelocity.magnitude)
                 {
                     moveVector = Vector3.ProjectOnPlane(moveVector, groundVelocity.normalized);
@@ -82,7 +82,6 @@ namespace NuiN.Movement
             }
             else
             {
-                // account for ground drag
                 moveVector *= groundSpeedMult;
                 rb.drag = groundDrag;
                 _curAirJumps = 0;
@@ -90,7 +89,6 @@ namespace NuiN.Movement
     
             rb.velocity += moveVector.With(y: 0);
         }
-
 
         void IMovement.Rotate(IMovementInput input)
         {
@@ -104,6 +102,7 @@ namespace NuiN.Movement
         {
             if (!jumpDelay.Complete()) return;
 
+            // set jumping true to immediately switch to air drag in movement logic
             _jumping = true;
             
             if (_grounded)
@@ -116,7 +115,7 @@ namespace NuiN.Movement
             if (_curAirJumps >= maxAirJumps) return;
             _curAirJumps++;
 
-            // only SETS y velocity when y velocity is less than potential jump force. Otherwise it would set y vel to a lower value when going faster
+            // only sets y velocity when y velocity is less than potential jump force. Otherwise it would set y vel to a lower value when going faster
             if (rb.velocity.y <= jumpForce)
             {
                 rb.velocity = rb.velocity.With(y: jumpForce);
