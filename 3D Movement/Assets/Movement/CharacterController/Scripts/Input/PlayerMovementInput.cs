@@ -63,7 +63,7 @@ public class PlayerMovementInput : MonoBehaviour, IMovementInput
 
     Quaternion IMovementInput.GetHeadRotation()
     {
-        return _fullRotation;
+        return Quaternion.Euler(0, 0, _fullRotation.eulerAngles.z);
     }
 
     bool IMovementInput.IsRunning()

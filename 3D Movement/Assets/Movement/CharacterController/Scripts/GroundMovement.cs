@@ -7,7 +7,7 @@ namespace NuiN.Movement
     {
         [Header("Dependencies")]
         [SerializeField] Rigidbody rb;
-        [SerializeField] Transform feet;
+        [SerializeField] SphereCollider feet;
 
         [Header("Move Speed Settings")]
         [SerializeField] float moveSpeed = 0.375f;
@@ -35,7 +35,6 @@ namespace NuiN.Movement
         [SerializeField] float groundCheckDist = 0.25f;
         [SerializeField] float slopeCheckDist = 0.25f;
         //[SerializeField] float maxSlopeAngle = 45f;
-
         
         int _curAirJumps;
         bool _grounded;
@@ -48,7 +47,7 @@ namespace NuiN.Movement
 
         void FixedUpdate()
         {
-            if (rb.velocity.y <= downForceStartUpVelocity)
+            if (!_grounded && rb.velocity.y <= downForceStartUpVelocity)
             {
                 rb.velocity += Vector3.down * downForceMult;
             }
@@ -62,8 +61,11 @@ namespace NuiN.Movement
 
             float speed = (running ? moveSpeed * runSpeedMult : moveSpeed);
     
-            _grounded = Physics.Raycast(feet.position, -feet.up, out RaycastHit groundHit, groundCheckDist, groundMask);
-            bool onSlope = Physics.Raycast(feet.position, feet.forward, out RaycastHit slopeHit, slopeCheckDist, groundMask);
+            _grounded =  Physics.OverlapSphere(feet.transform.position, feet.radius, groundMask).Length > 0;
+
+            Vector3 bottomOfFeet = feet.transform.position - new Vector3(0, feet.radius / 2, 0);
+            bool onSlope = Physics.Raycast(bottomOfFeet, direction, out RaycastHit slopeHit, slopeCheckDist, groundMask);
+            Debug.Log(onSlope);
 
             Vector3 moveVector = direction * speed;
             Vector3 groundVelocity = rb.velocity.With(y: 0);
@@ -88,6 +90,8 @@ namespace NuiN.Movement
             }
     
             rb.velocity += moveVector.With(y: 0);
+
+            DrawDebug(bottomOfFeet, direction);
         }
 
         void IMovement.Rotate(IMovementInput input)
@@ -104,11 +108,13 @@ namespace NuiN.Movement
 
             // set jumping true to immediately switch to air drag in movement logic
             _jumping = true;
+
+            Vector3 vel = rb.velocity;
             
             if (_grounded)
             {
                 _curAirJumps = 0;
-                rb.velocity = rb.velocity.With(y: jumpForce);
+                rb.velocity = vel.With(y: jumpForce);
                 return;
             }
 
@@ -116,9 +122,10 @@ namespace NuiN.Movement
             _curAirJumps++;
 
             // only sets y velocity when y velocity is less than potential jump force. Otherwise it would set y vel to a lower value when going faster
-            if (rb.velocity.y <= jumpForce)
+            
+            if (vel.y <= jumpForce)
             {
-                rb.velocity = rb.velocity.With(y: jumpForce);
+                rb.velocity = vel.With(y: jumpForce);
             }
             else
             {
@@ -129,6 +136,11 @@ namespace NuiN.Movement
         void OnCollisionEnter(Collision other)
         {
             _jumping = false;
+        }
+
+        void DrawDebug(Vector3 bottomOfFeet, Vector3 direction)
+        {
+            Debug.DrawRay(bottomOfFeet, direction * slopeCheckDist, Color.yellow);
         }
     }
 }
