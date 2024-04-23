@@ -26,7 +26,7 @@ public class MovementDebugHUD : MonoBehaviour
         fullText += "Speed XZ: " + rb.velocity.With(y: 0).magnitude.ToString("0.00") + "\n";
         fullText += "Speed Y: " + rb.velocity.y.ToString("0.00") + "\n";
 
-        string jumpHeightString = "0.00";
+        string jumpHeightString = (_jumpEndHeight - _jumpStartHeight).ToString("0:00");
 
         float curHeight = rb.position.y;
         

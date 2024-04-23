@@ -28,11 +28,10 @@ namespace NuiN.Movement
             _input = GetComponent<IMovementInput>();
             if (_input == null) Debug.LogError($"Missing MovementInput on {gameObject.name}", gameObject);
         }
-
+        
         void Update()
         {
             if(_input.ShouldJump()) _movement.Jump();
-            
             if(CanRotate) _movement.Rotate(_input);
         }
 

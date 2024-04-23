@@ -14,6 +14,6 @@ public class HeadMovementController : MonoBehaviour
 
     void Update()
     {
-        head.rotation = _input.GetHeadRotation();
+        head.localRotation = _input.GetHeadRotation();
     }
 }

@@ -15,7 +15,7 @@ public class PlayerMovementInput : MonoBehaviour, IMovementInput
     [SerializeField] float lookSensitivity = 20f;
     [Range(0f, 90f)][SerializeField] float yRotationLimit = 88f;
 
-    Quaternion _fullRotation;
+    Quaternion _headRotation;
 
     void Awake()
     {
@@ -51,19 +51,18 @@ public class PlayerMovementInput : MonoBehaviour, IMovementInput
         _rotation.x += Input.GetAxis(MOUSE_X) * lookSensitivity;
         _rotation.y += Input.GetAxis(MOUSE_Y) * lookSensitivity;
         _rotation.y = Mathf.Clamp(_rotation.y, -yRotationLimit, yRotationLimit);
-    
+
         var xQuat = Quaternion.AngleAxis(_rotation.x, Vector3.up);
         var yQuat = Quaternion.AngleAxis(_rotation.y, Vector3.left);
+        
+        _headRotation = yQuat;
 
-        Quaternion newRotation = xQuat * yQuat;
-        _fullRotation = newRotation;
-
-        return Quaternion.Euler(0, newRotation.eulerAngles.y, 0);
+        return xQuat;
     }
 
     Quaternion IMovementInput.GetHeadRotation()
     {
-        return Quaternion.Euler(0, 0, _fullRotation.eulerAngles.z);
+        return _headRotation;
     }
 
     bool IMovementInput.IsRunning()
