@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class PlayerMovementInput : MonoBehaviour, IMovementInput
 {
+    const string AXIS_X = "Horizontal";
+    const string AXIS_Y = "Vertical";
+    
     const string MOUSE_X = "Mouse X";
     const string MOUSE_Y = "Mouse Y";
     
@@ -30,8 +33,8 @@ public class PlayerMovementInput : MonoBehaviour, IMovementInput
 
     Vector3 IMovementInput.GetDirection()
     {
-        float x = Input.GetAxisRaw("Horizontal");
-        float z = Input.GetAxisRaw("Vertical");
+        float x = Input.GetAxisRaw(AXIS_X);
+        float z = Input.GetAxisRaw(AXIS_Y);
 
         Vector3 forward = transform.forward;
         Vector3 right = transform.right;

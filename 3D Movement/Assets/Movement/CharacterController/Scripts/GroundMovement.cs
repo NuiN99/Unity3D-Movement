@@ -16,8 +16,9 @@ namespace NuiN.Movement
         [SerializeField] float maxAirVelocityMagnitude = 6.2f;
 
         [SerializeField] float groundSpeedMult = 1.8f;
-        [SerializeField] float groundDrag = 10f;
+        [SerializeField] float groundDrag = 15f;
         [SerializeField] float airDrag = 0.002f;
+        [SerializeField] float airNoInputCounteractMult = 0.01f;
         
         [Header("Rotate Speed Settings")]
         [SerializeField] float walkingRotateSpeed = 99999f;
@@ -25,16 +26,16 @@ namespace NuiN.Movement
 
         [Header("Jump Settings")] 
         [SerializeField] SimpleTimer jumpDelay = new(0.2f);
-        [SerializeField] float jumpForce = 8f;
+        [SerializeField] float jumpForce = 6f;
         [SerializeField] int maxAirJumps = 1;
-        [SerializeField] float downForceMult = 0.1f;
-        [SerializeField] float downForceStartUpVelocity = 0.1f;
+        [SerializeField] float downForceMult = 0.15f;
+        [SerializeField] float downForceStartUpVelocity = 3f;
 
         [Header("Environment Settings")]
         [SerializeField] LayerMask groundMask;
         [SerializeField] float groundCheckDist = 0.25f;
         [SerializeField] float slopeCheckDist = 0.25f;
-        //[SerializeField] float maxSlopeAngle = 45f;
+        [SerializeField] float maxSlopeAngle = 45f;
         
         int _curAirJumps;
         bool _grounded;
@@ -57,15 +58,13 @@ namespace NuiN.Movement
         {
             Vector3 direction = input.GetDirection().With(y: 0);
 
+            bool inputtingDirection = direction != Vector3.zero;
+
             bool running = input.IsRunning();
 
             float speed = (running ? moveSpeed * runSpeedMult : moveSpeed);
     
             _grounded =  Physics.OverlapSphere(feet.transform.position, feet.radius, groundMask).Length > 0;
-
-            Vector3 bottomOfFeet = feet.transform.position - new Vector3(0, feet.radius / 2, 0);
-            bool onSlope = Physics.Raycast(bottomOfFeet, direction, out RaycastHit slopeHit, slopeCheckDist, groundMask);
-            Debug.Log(onSlope);
 
             Vector3 moveVector = direction * speed;
             Vector3 groundVelocity = rb.velocity.With(y: 0);
@@ -81,12 +80,28 @@ namespace NuiN.Movement
                 {
                     moveVector = Vector3.ProjectOnPlane(moveVector, groundVelocity.normalized);
                 }
+
+                if (!inputtingDirection)
+                {
+                    moveVector = -rb.velocity * airNoInputCounteractMult;
+                }
             }
             else
             {
                 moveVector *= groundSpeedMult;
                 rb.drag = groundDrag;
                 _curAirJumps = 0;
+            }
+            
+            Vector3 bottomOfFeet = feet.transform.position - new Vector3(0, feet.radius, 0);
+            bool onSlope = Physics.Raycast(bottomOfFeet, direction, out RaycastHit slopeHit, slopeCheckDist, groundMask);
+            if (onSlope)
+            {
+                float angle = VectorUtils.DirectionAngle(slopeHit.normal) - 90;
+                if (angle > maxSlopeAngle && rb.velocity.y > 0)
+                {
+                    // moving towards slope
+                }
             }
     
             rb.velocity += moveVector.With(y: 0);

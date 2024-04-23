@@ -467,12 +467,13 @@ MonoBehaviour:
   groundSpeedMult: 2.85
   groundDrag: 15
   airDrag: 0.002
+  airNoInputCounteractMult: 0.015
   walkingRotateSpeed: 99999
   runningRotateSpeed: 99999
   jumpDelay:
     duration: 0.15
     startCompleted: 1
-  jumpForce: 8
+  jumpForce: 6
   maxAirJumps: 1
   downForceMult: 0.15
   downForceStartUpVelocity: 3
