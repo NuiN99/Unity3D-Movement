@@ -25,12 +25,8 @@ namespace NuiN.Movement
         [SerializeField] float bottomStepCheckDist = 0.3f;
         [SerializeField] float topStepCheckDist = 0.4f;
         
-        [Header("Rotate Speed Settings")]
-        [SerializeField] float walkingRotateSpeed = 99999f;
-        [SerializeField] float runningRotateSpeed = 99999f;
-
         [Header("Jump Settings")] 
-        [SerializeField] SimpleTimer jumpDelay = new(0.2f, true);
+        [SerializeField] SimpleTimer jumpDelay = new(0.2f);
         [SerializeField] float jumpForce = 6f;
         [SerializeField] int maxAirJumps = 1;
         [SerializeField] float gravity = 0.15f;
@@ -42,12 +38,13 @@ namespace NuiN.Movement
         [SerializeField] float groundCheckRadiusMult = 0.9f;
         [SerializeField] float slopeCheckDist = 0.25f;
         [SerializeField] float maxSlopeAngle = 45f;
-
-        Vector3 _direction;
-        int _curAirJumps;
+        
         [ShowInInspector] bool _grounded;
         [ShowInInspector] bool _jumping;
         [ShowInInspector] bool _onSlope;
+        
+        Vector3 _direction;
+        int _curAirJumps;
 
         Vector3 BottomOfCapsule => transform.TransformPoint(capsuleCollider.center - new Vector3(0, (capsuleCollider.height * 0.5f) - capsuleCollider.radius , 0));
 
@@ -66,11 +63,11 @@ namespace NuiN.Movement
 
         void IMovement.Move(IMovementInput input)
         {
-            _direction = input.GetDirection().With(y: 0);
+            _direction = input.GetDirection();
 
             bool inputtingDirection = _direction != Vector3.zero;
 
-            bool running = input.IsRunning();
+            bool running = input.InputtingSprint();
 
             float speed = (running ? moveSpeed * runSpeedMult : moveSpeed);
 
@@ -156,9 +153,7 @@ namespace NuiN.Movement
         void IMovement.Rotate(IMovementInput input)
         {
             Quaternion rotation = input.GetRotation();
-            float rotateSpeed = input.IsRunning() ? runningRotateSpeed : walkingRotateSpeed;
-
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, rotation, rotateSpeed);
+            transform.rotation = rotation;
         }
 
         void IMovement.Jump()
@@ -217,6 +212,9 @@ namespace NuiN.Movement
             Gizmos.DrawRay(stepCheckBottom, direction * bottomStepCheckDist);
             Gizmos.color = Color.cyan;
             Gizmos.DrawRay(stepCheckTop, direction * topStepCheckDist);
+
+            Gizmos.color = Color.red;
+            Gizmos.DrawRay(transform.position, transform.forward * 100);
         }
     }
 }
