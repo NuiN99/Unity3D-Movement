@@ -18,7 +18,7 @@ public class InspectorMovementInput : MonoBehaviour, IMovementInput
         return rotation;
     }
 
-    public Quaternion GetHeadRotation()
+    public Quaternion GetCameraRotation()
     {
         return default;
     }

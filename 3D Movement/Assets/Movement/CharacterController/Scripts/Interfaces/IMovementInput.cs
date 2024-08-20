@@ -6,7 +6,7 @@ namespace NuiN.Movement
     {
         Vector3 GetDirection();
         Quaternion GetRotation();
-        Quaternion GetHeadRotation();
+        Quaternion GetCameraRotation();
         bool ShouldJump();
         bool IsRunning();
     }

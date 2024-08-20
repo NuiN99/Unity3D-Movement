@@ -1,5 +1,58 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1122282635551784247
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2433520498388101075}
+  - component: {fileID: 7654040775066016637}
+  m_Layer: 7
+  m_Name: SlopeChecker
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2433520498388101075
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1122282635551784247}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.537, z: 0}
+  m_LocalScale: {x: 0.8788564, y: 0.8788564, z: 0.8788564}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5453803518092506982}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!135 &7654040775066016637
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1122282635551784247}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.48
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &1766139468935198806
 GameObject:
   m_ObjectHideFlags: 0
@@ -460,6 +513,7 @@ Transform:
   m_Children:
   - {fileID: 9168599946072836777}
   - {fileID: 4472354342425628189}
+  - {fileID: 2433520498388101075}
   - {fileID: 4047726306230324993}
   - {fileID: 4600668194171268482}
   m_Father: {fileID: 0}
@@ -492,7 +546,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rb: {fileID: 401051018504778823}
-  feet: {fileID: 2856041887698553566}
+  capsuleCollider: {fileID: 7199680711078145188}
   stepCheck: {fileID: 4047726306230324993}
   moveSpeed: 0.375
   runSpeedMult: 1.5
@@ -512,12 +566,13 @@ MonoBehaviour:
     startCompleted: 1
   jumpForce: 6
   maxAirJumps: 1
-  downForceMult: 0.15
-  downForceStartUpVelocity: 3
+  gravity: 0.15
+  gravityStartVelocityUp: 3
   groundMask:
     serializedVersion: 2
     m_Bits: 55
-  groundCheckDist: 0.25
+  groundCheckDist: 0.2
+  groundCheckRadiusMult: 0.9
   slopeCheckDist: 0.5
   maxSlopeAngle: 45
 --- !u!114 &4629620327115826977
@@ -672,7 +727,7 @@ GameObject:
   - component: {fileID: 4472354342425628189}
   - component: {fileID: 2856041887698553566}
   m_Layer: 7
-  m_Name: Feet
+  m_Name: GroundChecker
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

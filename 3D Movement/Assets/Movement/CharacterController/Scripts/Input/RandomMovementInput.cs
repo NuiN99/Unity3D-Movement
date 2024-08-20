@@ -28,7 +28,7 @@ public class RandomMovementInput : MonoBehaviour, IMovementInput
         return _rotation;
     }
 
-    public Quaternion GetHeadRotation()
+    public Quaternion GetCameraRotation()
     {
         return _rotation;
     }

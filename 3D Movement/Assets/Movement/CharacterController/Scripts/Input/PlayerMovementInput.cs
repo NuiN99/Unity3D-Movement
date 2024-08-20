@@ -10,7 +10,6 @@ public class PlayerMovementInput : MonoBehaviour, IMovementInput
     const string MOUSE_X = "Mouse X";
     const string MOUSE_Y = "Mouse Y";
     
-    Vector2 _rotation;
     
     [SerializeField] KeyCode sprintKey = KeyCode.LeftShift;
     [SerializeField] KeyCode jumpKey = KeyCode.Space;
@@ -18,12 +17,15 @@ public class PlayerMovementInput : MonoBehaviour, IMovementInput
     [SerializeField] float lookSensitivity = 20f;
     [Range(0f, 90f)][SerializeField] float yRotationLimit = 88f;
 
-    Quaternion _headRotation;
+    Vector2 _rotation;
+    Quaternion _cameraRotation;
 
     void Awake()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = true;
+
+        _rotation.x = transform.eulerAngles.y;
     }
 
     bool IMovementInput.ShouldJump()
@@ -52,20 +54,17 @@ public class PlayerMovementInput : MonoBehaviour, IMovementInput
     Quaternion IMovementInput.GetRotation()
     {
         _rotation.x += Input.GetAxis(MOUSE_X) * lookSensitivity;
-        _rotation.y += Input.GetAxis(MOUSE_Y) * lookSensitivity;
-        _rotation.y = Mathf.Clamp(_rotation.y, -yRotationLimit, yRotationLimit);
-
-        var xQuat = Quaternion.AngleAxis(_rotation.x, Vector3.up);
-        var yQuat = Quaternion.AngleAxis(_rotation.y, Vector3.left);
         
-        _headRotation = yQuat;
-
-        return xQuat;
+        return Quaternion.AngleAxis(_rotation.x, Vector3.up);
     }
 
-    Quaternion IMovementInput.GetHeadRotation()
+    Quaternion IMovementInput.GetCameraRotation()
     {
-        return _headRotation;
+        _rotation.y += Input.GetAxis(MOUSE_Y) * lookSensitivity;
+        _rotation.y = Mathf.Clamp(_rotation.y, -yRotationLimit, yRotationLimit);
+        
+        _cameraRotation = Quaternion.AngleAxis(_rotation.y, Vector3.left);
+        return _cameraRotation;
     }
 
     bool IMovementInput.IsRunning()
