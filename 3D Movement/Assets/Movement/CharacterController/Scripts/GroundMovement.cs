@@ -143,12 +143,13 @@ namespace NuiN.Movement
             Vector3 stepCheckBottom = stepCheck.position;
             Vector3 stepCheckTop = stepCheck.position.Add(y: stepHeight);
 
-            Vector3 direction = rb.velocity.With(y: 0);
+            Vector3 direction = _direction != Vector3.zero ? _direction : rb.velocity.With(y: 0).normalized;
             
             if (Physics.Raycast(stepCheckBottom, direction, bottomStepCheckDist, groundMask) && 
                 !Physics.Raycast(stepCheckTop, direction, topStepCheckDist, groundMask))
             {
-                rb.position += Vector3.zero.With(y: stepSpeed);
+                rb.velocity = rb.velocity.With(y: 0);
+                rb.position += new Vector3(0, stepSpeed, 0);
             }
         }
 
@@ -206,6 +207,16 @@ namespace NuiN.Movement
         {
             Gizmos.color = _grounded ? Color.black.WithAlpha(0.25f) : Color.white.WithAlpha(0.25f);
             Gizmos.DrawSphere(BottomOfCapsule.Add(y:-groundCheckDist), capsuleCollider.radius * groundCheckRadiusMult);
+            
+            Vector3 stepCheckBottom = stepCheck.position;
+            Vector3 stepCheckTop = stepCheck.position.Add(y: stepHeight);
+
+            Vector3 direction = _direction != Vector3.zero ? _direction : rb.velocity.With(y: 0).normalized;
+
+            Gizmos.color = Color.blue;
+            Gizmos.DrawRay(stepCheckBottom, direction * bottomStepCheckDist);
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawRay(stepCheckTop, direction * topStepCheckDist);
         }
     }
 }
