@@ -8,7 +8,7 @@ using UnityEngine.UI;
 public class MovementDebugHUD : MonoBehaviour
 {
     [SerializeField] Rigidbody rb;
-    [SerializeField] CollisionProxy playerColliison;
+    [SerializeField] CollisionEventDispatcher playerColliison;
     
     [SerializeField] TMP_Text text;
 

@@ -693,31 +693,24 @@ MonoBehaviour:
   rb: {fileID: 6389075158336444974}
   capsuleCollider: {fileID: 5994325282677940650}
   stepCheck: {fileID: 2031610623087268195}
-  moveSpeed: 0.375
-  runSpeedMult: 1.5
-  maxAirVelocityMagnitude: 6.2
-  groundSpeedMult: 2.85
-  groundDrag: 15
+  maxSpeed: 5
+  acceleration: 10
+  sprintingMaxSpeedMult: 1.5
+  airControlFactor: 1
+  groundDrag: 5
   airDrag: 0.002
-  airNoInputCounteractMult: 0.015
-  stepHeight: 0.5
-  stepSpeed: 0.2
-  bottomStepCheckDist: 0.9
-  topStepCheckDist: 1
-  jumpDelay:
-    duration: 0.15
-    startCompleted: 1
   jumpForce: 6
   maxAirJumps: 1
   gravity: 0.15
   gravityStartVelocityUp: 3
+  disableGroundCheckAfterJumpTimer:
+    startCompleted: 0
+    duration: 0.1
   groundMask:
     serializedVersion: 2
     m_Bits: 55
   groundCheckDist: 0.2
   groundCheckRadiusMult: 0.9
-  slopeCheckDist: 0.5
-  maxSlopeAngle: 45
 --- !u!114 &9165061509579458865
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -766,7 +759,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6927627560596684522}
   serializedVersion: 4
-  m_Mass: 20
+  m_Mass: 1
   m_Drag: 0
   m_AngularDrag: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
