@@ -695,8 +695,8 @@ MonoBehaviour:
   stepCheck: {fileID: 2031610623087268195}
   maxSpeed: 5
   acceleration: 10
-  sprintingMaxSpeedMult: 1.5
-  airControlFactor: 1
+  sprintingMaxSpeedMult: 1.75
+  airControlFactor: 0.25
   groundDrag: 5
   airDrag: 0.002
   jumpForce: 6

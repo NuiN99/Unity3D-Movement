@@ -33,9 +33,10 @@ namespace NuiN.Movement
         [ShowInInspector] bool _isGrounded;
         [ShowInInspector] bool _isJumping;
         [ShowInInspector] bool _isSprinting;
-        
+        [ShowInInspector] bool _isInputtingJump;
+        [ShowInInspector] int _curAirJumps;
+
         Vector3 _direction;
-        int _curAirJumps;
 
         Vector3 BottomOfCapsule => transform.TransformPoint(capsuleCollider.center - new Vector3(0, (capsuleCollider.height * 0.5f) - capsuleCollider.radius , 0));
         
@@ -49,6 +50,13 @@ namespace NuiN.Movement
 
         void IMovement.Move(IMovementInput input)
         {
+            bool wasInputtingJump = _isInputtingJump;
+            _isInputtingJump = input.InputtingJump();
+            if (!wasInputtingJump && _isInputtingJump && _isJumping && disableGroundCheckAfterJumpTimer.IsComplete)
+            {
+                JumpAir();
+            }
+            
             _direction = input.GetDirection();
             _isGrounded = 
                 disableGroundCheckAfterJumpTimer.IsComplete && 
@@ -113,25 +121,24 @@ namespace NuiN.Movement
 
         void IMovement.Jump()
         {
-            Vector3 vel = rb.velocity;
+            if (!_isGrounded) return;
             
-            if (_isGrounded)
-            {
-                _isJumping = true;
-                disableGroundCheckAfterJumpTimer.Restart();
+            _isJumping = true;
+            disableGroundCheckAfterJumpTimer.Restart();
                 
-                _curAirJumps = 0;
-                rb.velocity = vel.With(y: jumpForce);
-                return;
-            }
+            _curAirJumps = 0;
+            rb.velocity = rb.velocity.With(y: jumpForce);
+        }
 
+        void JumpAir()
+        {
             if (_curAirJumps >= maxAirJumps) return;
             _curAirJumps++;
 
             // only sets y velocity when y velocity is less than potential jump force. Otherwise it would set y vel to a lower value when going faster
-            if (vel.y <= jumpForce)
+            if (rb.velocity.y <= jumpForce)
             {
-                rb.velocity = vel.With(y: jumpForce);
+                rb.velocity = rb.velocity.With(y: jumpForce);
             }
             else
             {
