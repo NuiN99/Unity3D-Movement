@@ -34,6 +34,8 @@ namespace NuiN.Movement
         [SerializeField] LayerMask groundMask;
         [SerializeField] float groundCheckDist = 0.1f;
         [SerializeField] float groundCheckRadiusMult = 0.9f;
+        [SerializeField] float objectAlignmentForce = 50f;
+        [SerializeField] float forwardAlignCheckDist = 0.5f;
         
         [ShowInInspector] bool _isGrounded;
         [ShowInInspector] bool _isJumping;
@@ -43,6 +45,7 @@ namespace NuiN.Movement
 
         Vector3 _direction = Vector3.zero;
         Vector3 _groundNormal = Vector3.zero;
+        List<Rigidbody> _objectsBeingStoodOn = new();
 
         void FixedUpdate()
         {
@@ -57,11 +60,11 @@ namespace NuiN.Movement
             }
             else
             {
-                rb.AddForce(_groundNormal * -100);
+                rb.AddForce(_groundNormal * -objectAlignmentForce);
 
-                foreach (var thing in _rigidbodies)
+                foreach (var thing in _objectsBeingStoodOn)
                 {
-                    thing.AddForce(_groundNormal * 100);
+                    thing.AddForce(_groundNormal * objectAlignmentForce);
                 }
             }
         }
@@ -172,17 +175,22 @@ namespace NuiN.Movement
             }
         }
 
-        List<Rigidbody> _rigidbodies = new();
         
         bool IsOnGround()
         {
+            _objectsBeingStoodOn.Clear();
+            
             Vector3 groundCheckPos = transform.TransformPoint(capsuleCollider.center - new Vector3(0, ((capsuleCollider.height * 0.5f) + groundCheckDist) - capsuleCollider.radius , 0));
+
+            if (Physics.Raycast(groundCheckPos, transform.forward, out RaycastHit hit, forwardAlignCheckDist, groundMask))
+            {
+                _groundNormal = hit.normal;
+                return true;
+            }
             
             Collider[] colliders = Physics.OverlapSphere(groundCheckPos, capsuleCollider.radius * groundCheckRadiusMult, groundMask);
 
             Vector3 avgNormal = Vector3.zero;
-            
-            _rigidbodies.Clear();
             
             int count = 0;
             foreach (Collider col in colliders)
@@ -194,7 +202,7 @@ namespace NuiN.Movement
 
                     if (col.TryGetComponent(out Rigidbody otherRB))
                     {
-                        _rigidbodies.Add(otherRB);
+                        _objectsBeingStoodOn.Add(otherRB);
                     }
                 }
             }
