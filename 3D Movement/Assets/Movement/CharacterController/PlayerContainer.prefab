@@ -637,7 +637,7 @@ MonoBehaviour:
   airControlFactor: 0.25
   groundDrag: 5
   airDrag: 0.002
-  turnSpeed: 0.1
+  turnSpeed: 0.05
   maxWalkableWallAngle: 0
   jumpForce: 6
   maxAirJumps: 1

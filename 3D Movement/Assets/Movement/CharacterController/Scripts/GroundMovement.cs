@@ -34,7 +34,6 @@ namespace NuiN.Movement
         [SerializeField] LayerMask groundMask;
         [SerializeField] float groundCheckDist = 0.1f;
         [SerializeField] float groundCheckRadiusMult = 0.9f;
-        [SerializeField] float objectAlignmentForce = 50f;
         [SerializeField] float forwardAlignCheckDist = 0.5f;
         
         [ShowInInspector] bool _isGrounded;
@@ -45,9 +44,13 @@ namespace NuiN.Movement
 
         Vector3 _direction = Vector3.zero;
         Vector3 _groundNormal = Vector3.zero;
-        List<Rigidbody> _objectsBeingStoodOn = new();
 
         void FixedUpdate()
+        {
+            ApplyGravity();
+        }
+
+        void ApplyGravity()
         {
             if (!_isGrounded && rb.velocity.y <= gravityStartVelocityUp)
             {
@@ -57,15 +60,6 @@ namespace NuiN.Movement
             if(!_isGrounded)
             {
                 rb.AddForce(Physics.gravity, ForceMode.Acceleration);
-            }
-            else
-            {
-                rb.AddForce(_groundNormal * -objectAlignmentForce);
-
-                foreach (var thing in _objectsBeingStoodOn)
-                {
-                    thing.AddForce(_groundNormal * objectAlignmentForce);
-                }
             }
         }
 
@@ -153,11 +147,11 @@ namespace NuiN.Movement
             _curAirJumps = 0;
 
             // wall normal jump
-            Vector3 wallNormal = _groundNormal;
+            /*Vector3 wallNormal = _groundNormal;
             Vector3 horizontalVelocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
-            rb.velocity = horizontalVelocity + (jumpForce * wallNormal.normalized);
+            rb.velocity = horizontalVelocity + (jumpForce * wallNormal.normalized);*/
             
-            //rb.velocity = new Vector3(rb.velocity.x, jumpForce, rb.velocity.z);
+            rb.velocity = new Vector3(rb.velocity.x, jumpForce, rb.velocity.z);
         }
         
         void JumpAir()
@@ -178,11 +172,9 @@ namespace NuiN.Movement
         
         bool IsOnGround()
         {
-            _objectsBeingStoodOn.Clear();
-            
             Vector3 groundCheckPos = transform.TransformPoint(capsuleCollider.center - new Vector3(0, ((capsuleCollider.height * 0.5f) + groundCheckDist) - capsuleCollider.radius , 0));
 
-            if (Physics.Raycast(groundCheckPos, transform.forward, out RaycastHit hit, forwardAlignCheckDist, groundMask))
+            if (Physics.Raycast(groundCheckPos, rb.velocity.normalized, out RaycastHit hit, forwardAlignCheckDist, groundMask))
             {
                 _groundNormal = hit.normal;
                 return true;
@@ -199,11 +191,6 @@ namespace NuiN.Movement
                 {
                     count++;
                     avgNormal += normal;
-
-                    if (col.TryGetComponent(out Rigidbody otherRB))
-                    {
-                        _objectsBeingStoodOn.Add(otherRB);
-                    }
                 }
             }
             avgNormal /= count;
