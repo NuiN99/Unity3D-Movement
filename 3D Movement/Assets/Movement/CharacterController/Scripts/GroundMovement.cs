@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NuiN.NExtensions;
 using UnityEngine;
 
@@ -20,7 +21,7 @@ namespace NuiN.Movement
 
         [Header("Rotation Settings")] 
         [SerializeField] float turnSpeed;
-        [SerializeField] Timer resetRotationAfterLeaveGroundTimer;
+        [SerializeField] float maxWalkableWallAngle;
         
         [Header("Jump Settings")] 
         [SerializeField] float jumpForce = 6f;
@@ -54,6 +55,15 @@ namespace NuiN.Movement
             {
                 rb.AddForce(Physics.gravity, ForceMode.Acceleration);
             }
+            else
+            {
+                rb.AddForce(_groundNormal * -100);
+
+                foreach (var thing in _rigidbodies)
+                {
+                    thing.AddForce(_groundNormal * 100);
+                }
+            }
         }
 
         void IMovement.Move(IMovementInput input)
@@ -71,7 +81,6 @@ namespace NuiN.Movement
 
             if (_isGrounded)
             {
-                resetRotationAfterLeaveGroundTimer.Restart();
                 _isJumping = false;
             }
             
@@ -113,14 +122,17 @@ namespace NuiN.Movement
 
         void IMovement.Rotate(IMovementInput input)
         {
-            if (!_isGrounded && resetRotationAfterLeaveGroundTimer.IsComplete)
+            if (!_isGrounded)
             {
-                Quaternion normalRotation = Quaternion.Euler(0, transform.eulerAngles.y, 0);
-                transform.rotation = Quaternion.Slerp(transform.rotation, normalRotation, turnSpeed);
+                if (_direction != Vector3.zero)
+                {
+                    Quaternion normalRotation = Quaternion.LookRotation(_direction.With(y:0));
+                    transform.rotation = Quaternion.Slerp(transform.rotation, normalRotation, turnSpeed);
+                }
                 return;
             }
 
-            Vector3 validDirection = _direction == Vector3.zero ? rb.velocity : _direction;
+            Vector3 validDirection = _direction == Vector3.zero ? Vector3.ProjectOnPlane(rb.velocity, _groundNormal) : _direction;
             if (validDirection == Vector3.zero) 
                 return;
             
@@ -130,15 +142,38 @@ namespace NuiN.Movement
         void IMovement.Jump()
         {
             if (!_isGrounded) return;
-            
+
+            _isGrounded = false;
             _isJumping = true;
             disableGroundCheckAfterJumpTimer.Restart();
                 
             _curAirJumps = 0;
+
+            // wall normal jump
+            Vector3 wallNormal = _groundNormal;
+            Vector3 horizontalVelocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
+            rb.velocity = horizontalVelocity + (jumpForce * wallNormal.normalized);
             
-            rb.velocity = rb.velocity.With(y: jumpForce);
+            //rb.velocity = new Vector3(rb.velocity.x, jumpForce, rb.velocity.z);
+        }
+        
+        void JumpAir()
+        {
+            if (_curAirJumps >= maxAirJumps) return;
+            _curAirJumps++;
+            
+            if (rb.velocity.y <= jumpForce)
+            {
+                rb.velocity = rb.velocity.With(y: jumpForce);
+            }
+            else
+            {
+                rb.velocity += Vector3.up * jumpForce;
+            }
         }
 
+        List<Rigidbody> _rigidbodies = new();
+        
         bool IsOnGround()
         {
             Vector3 groundCheckPos = transform.TransformPoint(capsuleCollider.center - new Vector3(0, ((capsuleCollider.height * 0.5f) + groundCheckDist) - capsuleCollider.radius , 0));
@@ -146,7 +181,8 @@ namespace NuiN.Movement
             Collider[] colliders = Physics.OverlapSphere(groundCheckPos, capsuleCollider.radius * groundCheckRadiusMult, groundMask);
 
             Vector3 avgNormal = Vector3.zero;
-            /*Vector3 avgVel = Vector3.zero;*/
+            
+            _rigidbodies.Clear();
             
             int count = 0;
             foreach (Collider col in colliders)
@@ -155,10 +191,15 @@ namespace NuiN.Movement
                 {
                     count++;
                     avgNormal += normal;
+
+                    if (col.TryGetComponent(out Rigidbody otherRB))
+                    {
+                        _rigidbodies.Add(otherRB);
+                    }
                 }
             }
             avgNormal /= count;
-
+            
             _groundNormal = avgNormal.normalized;
             
             return colliders.Length > 0;
@@ -178,21 +219,6 @@ namespace NuiN.Movement
             rotatedMovementDirection = Vector3.ProjectOnPlane(rotatedMovementDirection, groundNormal);
 
             return rotatedMovementDirection.normalized;
-        }
-
-        void JumpAir()
-        {
-            if (_curAirJumps >= maxAirJumps) return;
-            _curAirJumps++;
-
-            if (rb.velocity.y <= jumpForce)
-            {
-                rb.velocity = rb.velocity.With(y: jumpForce);
-            }
-            else
-            {
-                rb.velocity += Vector3.up * jumpForce;
-            }
         }
     }
 }
