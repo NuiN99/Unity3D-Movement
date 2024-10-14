@@ -120,12 +120,11 @@ namespace NuiN.Movement
                 return;
             }
 
-            if (_direction == Vector3.zero)
-            {
+            Vector3 validDirection = _direction == Vector3.zero ? rb.velocity : _direction;
+            if (validDirection == Vector3.zero) 
                 return;
-            }
             
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(_direction, _groundNormal), turnSpeed);
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(validDirection, _groundNormal), turnSpeed);
         }
 
         void IMovement.Jump()
