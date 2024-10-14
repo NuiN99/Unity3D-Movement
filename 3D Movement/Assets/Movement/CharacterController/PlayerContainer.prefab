@@ -655,7 +655,7 @@ MonoBehaviour:
   groundDrag: 5
   airDrag: 0.002
   turnSpeed: 10
-  maxWalkableWallAngle: 0
+  maxWalkableWallAngle: 0.25
   jumpForce: 6
   maxAirJumps: 1
   postJumpGravity: 0.15

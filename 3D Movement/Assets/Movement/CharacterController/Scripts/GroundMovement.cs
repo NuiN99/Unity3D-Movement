@@ -44,6 +44,7 @@ namespace NuiN.Movement
         [ShowInInspector] bool _isGrounded;
         [ShowInInspector] bool _isJumping;
         [ShowInInspector] int _curAirJumps;
+        [ShowInInspector] bool _onInvalidSlope;
 
         Vector3 _direction = Vector3.zero;
         Vector3 _groundNormal = Vector3.zero;
@@ -65,8 +66,7 @@ namespace NuiN.Movement
             {
                 rb.velocity += Vector3.down * postJumpGravity;
             }
-            
-            if(!_isGrounded)
+            else if(!_isGrounded)
             {
                 rb.AddForce(Physics.gravity, ForceMode.Acceleration);
             }
@@ -101,7 +101,7 @@ namespace NuiN.Movement
             bool isInputtingDirection = _direction.magnitude > 0;
             if (!isInputtingDirection)
             {
-                if (_isGrounded && !_isJumping) rb.drag = groundDrag;
+                if (_isGrounded && !_isJumping && !_onInvalidSlope) rb.drag = groundDrag;
                 else rb.drag = airDrag;
                 return;
             }
@@ -137,7 +137,7 @@ namespace NuiN.Movement
         {
             float speed = turnSpeed * Time.deltaTime;
             
-            if (!_isGrounded || _groundNormal == Vector3.zero)
+            if (!_isGrounded || _groundNormal == Vector3.up)
             {
                 if (_direction != Vector3.zero)
                 {
@@ -184,13 +184,9 @@ namespace NuiN.Movement
         
         bool IsOnGround()
         {
+            Debug.Log(_groundNormal);
+            
             Vector3 groundCheckPos = transform.TransformPoint(capsuleCollider.center - new Vector3(0, ((capsuleCollider.height * 0.5f) + groundCheckDist) - capsuleCollider.radius , 0));
-
-            if (Physics.Raycast(groundCheckPos, transform.forward, out RaycastHit hit, forwardAlignCheckDist, alignMask))
-            {
-                _groundNormal = hit.normal;
-                return true;
-            }
             
             Collider[] colliders = Physics.OverlapSphere(groundCheckPos, capsuleCollider.radius * groundCheckRadiusMult, groundMask);
 
@@ -210,6 +206,21 @@ namespace NuiN.Movement
             avgNormal /= count;
             
             _groundNormal = avgNormal.normalized;
+            
+            if (Physics.Raycast(groundCheckPos, transform.forward, out RaycastHit hit, forwardAlignCheckDist, alignMask))
+            {
+                _groundNormal = hit.normal;
+            }
+
+            if (_groundNormal.y <= maxWalkableWallAngle)
+            {
+                _onInvalidSlope = true;
+                _groundNormal = Vector3.up;
+            }
+            else
+            {
+                _onInvalidSlope = false;
+            }
             
             return colliders.Length > 0;
         }
