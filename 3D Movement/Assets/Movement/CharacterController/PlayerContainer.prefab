@@ -651,7 +651,7 @@ MonoBehaviour:
     m_Bits: 55
   groundCheckDist: 0.1
   groundCheckRadiusMult: 0.9
-  objectAlignmentForce: 50
+  objectAlignmentForce: 100
   forwardAlignCheckDist: 1
 --- !u!114 &9165061509579458865
 MonoBehaviour:
