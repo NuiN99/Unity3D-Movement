@@ -1,3 +1,4 @@
+using Cinemachine.Utility;
 using NuiN.NExtensions;
 using UnityEngine;
 
@@ -8,7 +9,7 @@ namespace NuiN.Movement
         [Header("Dependencies")]
         [SerializeField] Rigidbody rb;
         [SerializeField] CapsuleCollider capsuleCollider;
-        [SerializeField] Transform stepCheck;
+        [SerializeField] Transform cameraTarget;
 
         [Header("Move Speed Settings")]
         [SerializeField] float maxSpeed = 10;
@@ -17,11 +18,15 @@ namespace NuiN.Movement
         [SerializeField] float airControlFactor = 0.25f;
         [SerializeField] float groundDrag = 15f;
         [SerializeField] float airDrag = 0.002f;
+
+        [Header("Rotation Settings")] 
+        [SerializeField] float turnSpeed;
+        [SerializeField] Timer resetRotationAfterLeaveGroundTimer;
         
         [Header("Jump Settings")] 
         [SerializeField] float jumpForce = 6f;
         [SerializeField] int maxAirJumps = 1;
-        [SerializeField] float gravity = 0.15f;
+        [SerializeField] float postJumpGravity = 0.15f;
         [SerializeField] float gravityStartVelocityUp = 3f;
         [SerializeField] Timer disableGroundCheckAfterJumpTimer;
 
@@ -36,15 +41,20 @@ namespace NuiN.Movement
         [ShowInInspector] bool _isInputtingJump;
         [ShowInInspector] int _curAirJumps;
 
-        Vector3 _direction;
+        Vector3 _direction = Vector3.zero;
+        Vector3 _groundNormal = Vector3.zero;
+        Vector3 _lastGroundNormal = Vector3.zero;
 
-        Vector3 BottomOfCapsule => transform.TransformPoint(capsuleCollider.center - new Vector3(0, (capsuleCollider.height * 0.5f) - capsuleCollider.radius , 0));
-        
         void FixedUpdate()
         {
             if (!_isGrounded && rb.velocity.y <= gravityStartVelocityUp)
             {
-                rb.velocity += Vector3.down * gravity;
+                rb.velocity += Vector3.down * postJumpGravity;
+            }
+            
+            if(!_isGrounded)
+            {
+                rb.AddForce(Physics.gravity, ForceMode.Acceleration);
             }
         }
 
@@ -57,13 +67,13 @@ namespace NuiN.Movement
                 JumpAir();
             }
             
-            _direction = input.GetDirection();
-            _isGrounded = 
-                disableGroundCheckAfterJumpTimer.IsComplete && 
-                Physics.OverlapSphere(BottomOfCapsule.Add(y: -groundCheckDist), capsuleCollider.radius * groundCheckRadiusMult, groundMask).Length > 0;
+            _direction = GetGroundAlignedDirection(input.GetDirection(), _groundNormal);
+            
+            _isGrounded = disableGroundCheckAfterJumpTimer.IsComplete && IsOnGround();
 
             if (_isGrounded)
             {
+                resetRotationAfterLeaveGroundTimer.Restart();
                 _isJumping = false;
             }
             
@@ -83,14 +93,12 @@ namespace NuiN.Movement
             // Calculate velocity along the input direction
             Vector3 inputVelocity = _direction * speed;
             
-            Vector3 horizontalVelocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
-
             // Separate the current velocity into two components:
             // 1. In the direction of the input
-            Vector3 velocityInInputDir = Vector3.Project(horizontalVelocity, _direction);
+            Vector3 velocityInInputDir = Vector3.Project(rb.velocity, _direction);
 
             // 2. Perpendicular to the input (this is to preserve any existing momentum)
-            Vector3 velocityPerpendicular = horizontalVelocity - velocityInInputDir;
+            Vector3 velocityPerpendicular = rb.velocity - velocityInInputDir;
 
             // Calculate the force we need to move toward the input velocity
             Vector3 desiredVelocity = inputVelocity + velocityPerpendicular;
@@ -102,7 +110,7 @@ namespace NuiN.Movement
             }
 
             // Apply force in the direction of the input, allowing for acceleration
-            Vector3 force = (desiredVelocity - horizontalVelocity) * (acceleration * Time.fixedDeltaTime);
+            Vector3 force = (desiredVelocity - rb.velocity) * (acceleration * Time.fixedDeltaTime);
             
             // Apply less force when in the air
             if (!_isGrounded)
@@ -115,8 +123,35 @@ namespace NuiN.Movement
 
         void IMovement.Rotate(IMovementInput input)
         {
-            Quaternion rotation = input.GetRotation();
-            transform.rotation = rotation;
+            if (!_isGrounded && resetRotationAfterLeaveGroundTimer.IsComplete)
+            {
+                Quaternion normalRotation = Quaternion.Euler(0, transform.eulerAngles.y, 0);
+                transform.rotation = Quaternion.Slerp(transform.rotation, normalRotation, turnSpeed);
+            }
+            
+            if (_direction.sqrMagnitude <= 0)
+            {
+                return;
+            }
+
+            // Ignore the vertical component of the movement direction
+            Vector3 flatMoveDir = new Vector3(_direction.x, 0, _direction.z).normalized;
+
+            // Align to the ground normal first
+            Quaternion groundAlignmentRotation = Quaternion.FromToRotation(Vector3.up, _groundNormal);
+
+            // Calculate the target Y-axis rotation based on movement direction
+            Quaternion targetYRotation = Quaternion.identity;
+            if (flatMoveDir.sqrMagnitude > 0)
+            {
+                targetYRotation = Quaternion.LookRotation(flatMoveDir, Vector3.up);
+            }
+            
+            // Apply the ground alignment to the player's rotation
+            Quaternion combinedRotation = groundAlignmentRotation * targetYRotation;
+
+            // Smoothly interpolate towards the new rotation
+            transform.rotation = Quaternion.Slerp(transform.rotation, combinedRotation, turnSpeed);
         }
 
         void IMovement.Jump()
@@ -127,7 +162,65 @@ namespace NuiN.Movement
             disableGroundCheckAfterJumpTimer.Restart();
                 
             _curAirJumps = 0;
+            
             rb.velocity = rb.velocity.With(y: jumpForce);
+        }
+
+        bool IsOnGround()
+        {
+            Vector3 groundCheckPos = transform.TransformPoint(capsuleCollider.center - new Vector3(0, ((capsuleCollider.height * 0.5f) + groundCheckDist) - capsuleCollider.radius , 0));
+            
+            Collider[] colliders = Physics.OverlapSphere(groundCheckPos, capsuleCollider.radius * groundCheckRadiusMult, groundMask);
+
+            Vector3 avgNormal = Vector3.zero;
+            /*Vector3 avgVel = Vector3.zero;*/
+            
+            int count = 0;
+            foreach (Collider col in colliders)
+            {
+                if (Physics.ComputePenetration(capsuleCollider, groundCheckPos, transform.rotation, col, col.transform.position, col.transform.rotation, out Vector3 normal, out float dist))
+                {
+                    count++;
+                    avgNormal += normal;
+
+                    /*if (col.TryGetComponent(out Rigidbody hitRB))
+                    {
+                        avgVel += hitRB.velocity;
+                    }*/
+                }
+            }
+            avgNormal /= count;
+            /*avgVel /= count;*/
+
+            /*if (!avgVel.IsNaN())
+            {
+                rb.AddForce(avgVel * 0.054f, ForceMode.VelocityChange);
+            }*/
+
+            _lastGroundNormal = _groundNormal;
+            _groundNormal = avgNormal.normalized;
+            
+            return colliders.Length > 0;
+        }
+        
+        Vector3 GetGroundAlignedDirection(Vector3 movementDirection, Vector3 groundNormal)
+        {
+            // Ensure the normal is valid
+            if (groundNormal.sqrMagnitude <= float.MinValue || !_isGrounded)
+            {
+                return movementDirection;
+            }
+
+            // Calculate the rotation to align movement with the ground
+            Quaternion rotationToGround = Quaternion.FromToRotation(Vector3.up, groundNormal);
+
+            // Rotate the movement direction to match the ground normal
+            Vector3 rotatedMovementDirection = rotationToGround * movementDirection;
+
+            // Remove any upward component to prevent additional upward force when moving uphill
+            rotatedMovementDirection = Vector3.ProjectOnPlane(rotatedMovementDirection, groundNormal);
+
+            return rotatedMovementDirection.normalized;
         }
 
         void JumpAir()

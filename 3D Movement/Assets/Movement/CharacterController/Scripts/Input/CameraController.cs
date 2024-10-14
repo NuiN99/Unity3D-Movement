@@ -15,6 +15,7 @@ public class CameraController : MonoBehaviour
 
     void Update()
     {
-        camFollowTarget.localRotation = _input.GetCameraRotation();
+        camFollowTarget.position = transform.position;
+        camFollowTarget.rotation = _input.GetCameraRotation();
     }
 }

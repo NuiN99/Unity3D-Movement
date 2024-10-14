@@ -52,23 +52,29 @@ public class PlayerMovementInput : MonoBehaviour, IMovementInput
 
     Vector3 IMovementInput.GetDirection()
     {
-        Vector3 moveDirection = (transform.forward * _moveDelta.y) + (transform.right * _moveDelta.x).With(y:0);
-        return moveDirection.normalized;
+        Vector3 dir = (camTransform.forward * _moveDelta.y) + (camTransform.right * _moveDelta.x).With(y:0).normalized;
+        return dir;
     }
     
     Quaternion IMovementInput.GetRotation()
     {
-        _rotation.x += _cameraDelta.x * lookSensitivity;
-        
-        return Quaternion.AngleAxis(_rotation.x, Vector3.up);
+        return transform.rotation;
     }
-
-    Quaternion IMovementInput.GetCameraRotation()
+    
+    public Quaternion GetCameraRotation()
     {
+        // Horizontal rotation (left-right) around the Y-axis
+        _rotation.x += _cameraDelta.x * lookSensitivity;
+    
+        // Vertical rotation (up-down) around the X-axis
         _rotation.y += _cameraDelta.y * lookSensitivity;
         _rotation.y = Mathf.Clamp(_rotation.y, -yRotationLimit, yRotationLimit);
-        
-        _cameraRotation = Quaternion.AngleAxis(_rotation.y, Vector3.left);
-        return _cameraRotation;
+
+        // Combine horizontal and vertical rotations
+        Quaternion horizontalRotation = Quaternion.AngleAxis(_rotation.x, Vector3.up);
+        Quaternion verticalRotation = Quaternion.AngleAxis(_rotation.y, Vector3.left);
+
+        // Return the combined rotation
+        return horizontalRotation * verticalRotation;
     }
 }
