@@ -184,8 +184,6 @@ namespace NuiN.Movement
         
         bool IsOnGround()
         {
-            Debug.Log(_groundNormal);
-            
             Vector3 groundCheckPos = transform.TransformPoint(capsuleCollider.center - new Vector3(0, ((capsuleCollider.height * 0.5f) + groundCheckDist) - capsuleCollider.radius , 0));
             
             Collider[] colliders = Physics.OverlapSphere(groundCheckPos, capsuleCollider.radius * groundCheckRadiusMult, groundMask);
