@@ -4,35 +4,35 @@ using UnityEngine;
 
 namespace NuiN.Movement
 {
-    [RequireComponent(typeof(IMovement), typeof(IMovementInput))]
     public class MovementController : MonoBehaviour
     {
-        public bool IsRunning => _input.InputtingSprint();
-
         [NonSerialized, ShowInInspector] public bool canMove = true;
         [NonSerialized, ShowInInspector] public bool canRotate = true;
-        
-        IMovement _movement;
-        IMovementInput _input;
 
-        void Awake()
-        {
-            _movement = GetComponent<IMovement>();
-            if(_movement == null) Debug.LogError($"Missing Movement component on {gameObject}", gameObject);
-            
-            _input = GetComponent<IMovementInput>();
-            if (_input == null) Debug.LogError($"Missing MovementInput on {gameObject.name}", gameObject);
-        }
-        
+        [SerializeField] SerializedInterface<IMovement> movement;
+        [SerializeField] SerializedInterface<IMovementInput> input;
+
+        IMovement Movement => movement.Value;
+        IMovementInput Input => input.Value;
+
+        void OnEnable() => Input.OnPressJump += PressJumpHandler;
+        void OnDisable() => Input.OnPressJump -= PressJumpHandler;
+
         void Update()
         {
-            if(_input.InputtingJump()) _movement.Jump();
-            if(canRotate) _movement.Rotate(_input);
+            if(canMove && Input.IsHoldingJump) Movement.HoldJump();
+            if(canRotate) Movement.Rotate();
+            Movement.RotateCamera(Input.CameraDelta);
+        }
+
+        void PressJumpHandler()
+        {
+            if(canMove) Movement.PressJump();
         }
 
         void FixedUpdate()
         {
-            if(canMove) _movement.Move(_input);
+            if(canMove) Movement.Move(Input.MoveDelta, Input.IsHoldingSprint);
         }
     }
 }

@@ -1,9 +1,13 @@
-﻿namespace NuiN.Movement
+﻿using UnityEngine;
+
+namespace NuiN.Movement
 {
     public interface IMovement
     {
-        void Move(IMovementInput input);
-        void Rotate(IMovementInput input);
-        void Jump();
+        void Move(Vector2 input, bool isHoldingSprint);
+        void Rotate();
+        void RotateCamera(Vector2 input);
+        void HoldJump();
+        void PressJump();
     }
 }

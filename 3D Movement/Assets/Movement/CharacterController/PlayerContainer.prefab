@@ -576,7 +576,6 @@ GameObject:
   - component: {fileID: 4991917449473700838}
   - component: {fileID: 9165061509579458865}
   - component: {fileID: 1472759206085472474}
-  - component: {fileID: 2240379408917033121}
   - component: {fileID: 6389075158336444974}
   - component: {fileID: 5994325282677940650}
   - component: {fileID: 6520974664878521699}
@@ -616,6 +615,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1944ac1dbee28fa4788dad7f3e62d72e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  movement:
+    mode: 0
+    unityReference: {fileID: 4991917449473700838}
+    rawReference:
+      rid: -2
+  input:
+    mode: 0
+    unityReference: {fileID: 9165061509579458865}
+    rawReference:
+      rid: -2
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
 --- !u!114 &4991917449473700838
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -631,13 +645,16 @@ MonoBehaviour:
   rb: {fileID: 6389075158336444974}
   capsuleCollider: {fileID: 5994325282677940650}
   cameraTarget: {fileID: 8480605940247006361}
+  cameraTransform: {fileID: 6898106003446041162}
+  cameraSensitivity: 0.25
+  yRotationLimit: 70
   maxSpeed: 5
   acceleration: 10
   sprintingMaxSpeedMult: 1.75
   airControlFactor: 0.25
   groundDrag: 5
   airDrag: 0.002
-  turnSpeed: 0.05
+  turnSpeed: 10
   maxWalkableWallAngle: 0
   jumpForce: 6
   maxAirJumps: 1
@@ -648,10 +665,12 @@ MonoBehaviour:
     duration: 0.1
   groundMask:
     serializedVersion: 2
-    m_Bits: 55
+    m_Bits: 257
+  alignMask:
+    serializedVersion: 2
+    m_Bits: 1
   groundCheckDist: 0.1
   groundCheckRadiusMult: 0.9
-  objectAlignmentForce: 50
   forwardAlignCheckDist: 1
 --- !u!114 &9165061509579458865
 MonoBehaviour:
@@ -665,9 +684,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5444d5bfba27667469fd688dd965c0a9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lookSensitivity: 0.2
-  yRotationLimit: 88
-  camTransform: {fileID: 6898106003446041162}
 --- !u!114 &1472759206085472474
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -680,19 +696,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e04225c2e9db50c43b59815887cc383c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &2240379408917033121
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6927627560596684522}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6a76a429d4af496a974baaf04bb245d4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  camFollowTarget: {fileID: 8480605940247006361}
 --- !u!54 &6389075158336444974
 Rigidbody:
   m_ObjectHideFlags: 0
