@@ -94,6 +94,7 @@ namespace NuiN.Movement
 
             if (_isGrounded)
             {
+                _curAirJumps = 0;
                 _isJumping = false;
             }
             
