@@ -68,7 +68,10 @@ namespace NuiN.Movement
             {
                 rb.velocity += Vector3.down * (fallingVelocity * Time.fixedDeltaTime);
             }
-            rb.AddForce(new Vector3(0, gravityForce, 0), ForceMode.Acceleration);
+            if (!_isGrounded)
+            {
+                rb.AddForce(new Vector3(0, gravityForce, 0), ForceMode.Acceleration);
+            }
         }
         
         void IMovement.RotateCamera(Vector2 delta)

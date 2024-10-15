@@ -650,9 +650,9 @@ MonoBehaviour:
   yRotationLimit: 70
   maxSpeed: 5
   acceleration: 10
-  sprintingMaxSpeedMult: 1.75
+  sprintingMaxSpeedMult: 1.5
   airControlFactor: 0.25
-  groundDrag: 5
+  groundDrag: 7.5
   airDrag: 0.002
   turnSpeed: 12.5
   maxWalkableWallAngle: 0.25
