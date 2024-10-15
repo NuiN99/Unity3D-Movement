@@ -32,6 +32,7 @@ namespace NuiN.Movement
         [SerializeField] int maxAirJumps = 1;
         [SerializeField] float fallingVelocity = 0.2f;
         [SerializeField] float gravityStartVelocityUp = 3f;
+        [SerializeField] float gravityForce;
         [SerializeField] Timer disableGroundCheckAfterJumpTimer;
 
         [Header("Environment Settings")]
@@ -65,12 +66,9 @@ namespace NuiN.Movement
         {
             if (!_isGrounded && rb.velocity.y <= gravityStartVelocityUp)
             {
-                rb.velocity += Vector3.down * fallingVelocity;
+                rb.velocity += Vector3.down * (fallingVelocity * Time.fixedDeltaTime);
             }
-            else if(!_isGrounded)
-            {
-                rb.AddForce(Physics.gravity, ForceMode.Acceleration);
-            }
+            rb.AddForce(new Vector3(0, gravityForce, 0), ForceMode.Acceleration);
         }
         
         void IMovement.RotateCamera(Vector2 delta)
@@ -151,11 +149,9 @@ namespace NuiN.Movement
             
             if (!_isGrounded || _groundNormal == Vector3.up)
             {
-                if (_direction != Vector3.zero)
-                {
-                    Quaternion normalRotation = Quaternion.LookRotation(_direction.With(y:0));
-                    transform.rotation = Quaternion.Slerp(transform.rotation, normalRotation, speed);
-                }
+                Vector3 dir = _direction == Vector3.zero ? transform.forward.With(y: 0) : _direction;
+                Quaternion normalRotation = Quaternion.LookRotation(dir.With(y:0));
+                transform.rotation = Quaternion.Slerp(transform.rotation, normalRotation, speed);
                 return;
             }
 

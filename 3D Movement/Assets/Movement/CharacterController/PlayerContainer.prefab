@@ -654,12 +654,13 @@ MonoBehaviour:
   airControlFactor: 0.25
   groundDrag: 5
   airDrag: 0.002
-  turnSpeed: 10
+  turnSpeed: 12.5
   maxWalkableWallAngle: 0.25
-  jumpForce: 7.5
+  jumpForce: 9
   maxAirJumps: 1
-  fallingVelocity: 0.25
+  fallingVelocity: 15
   gravityStartVelocityUp: 3
+  gravityForce: -15
   disableGroundCheckAfterJumpTimer:
     startCompleted: 0
     duration: 0.1
