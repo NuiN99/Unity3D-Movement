@@ -30,7 +30,7 @@ namespace NuiN.Movement
         [Header("Jump Settings")] 
         [SerializeField] float jumpForce = 6f;
         [SerializeField] int maxAirJumps = 1;
-        [SerializeField] float postJumpGravity = 0.15f;
+        [SerializeField] float fallingVelocity = 0.2f;
         [SerializeField] float gravityStartVelocityUp = 3f;
         [SerializeField] Timer disableGroundCheckAfterJumpTimer;
 
@@ -65,7 +65,7 @@ namespace NuiN.Movement
         {
             if (!_isGrounded && rb.velocity.y <= gravityStartVelocityUp)
             {
-                rb.velocity += Vector3.down * postJumpGravity;
+                rb.velocity += Vector3.down * fallingVelocity;
             }
             else if(!_isGrounded)
             {
@@ -166,7 +166,7 @@ namespace NuiN.Movement
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(validDirection, _groundNormal), speed);
         }
 
-        void IMovement.HoldJump()
+        void IMovement.GroundJump()
         {
             if (!_isGrounded) return;
 
@@ -179,7 +179,7 @@ namespace NuiN.Movement
             rb.velocity = new Vector3(rb.velocity.x, jumpForce, rb.velocity.z);
         }
 
-        void IMovement.PressJump()
+        void IMovement.AirJump()
         {
             if (_curAirJumps >= maxAirJumps) return;
             _curAirJumps++;
@@ -242,22 +242,6 @@ namespace NuiN.Movement
         
         Vector3 GetGroundAlignedDirection(Vector3 movementDirection, Vector3 groundNormal)
         {
-            Vector3 groundCheckPos = transform.TransformPoint(capsuleCollider.center - new Vector3(0, ((capsuleCollider.height * 0.5f) + groundCheckDist) - capsuleCollider.radius , 0));
-            if (Physics.Raycast(groundCheckPos, movementDirection, out RaycastHit hit, forwardAlignCheckDist, alignMask) && hit.normal.y <= maxWalkableWallAngle)
-            {
-                Vector3 rightDirection = Vector3.Cross(Vector3.up, hit.normal);
-
-                float dot = Vector3.Dot(movementDirection, rightDirection);
-
-                Vector3 slideDirection = Vector3.Cross(hit.normal, -Vector3.up);
-
-                float slideAmount = Mathf.Clamp(dot, -1f, 1f);
-
-                Vector3 finalSlideDirection = slideDirection * slideAmount;
-
-                return finalSlideDirection;
-            }
-            
             if (groundNormal.sqrMagnitude <= float.MinValue || !_isGrounded)
             {
                 return movementDirection;

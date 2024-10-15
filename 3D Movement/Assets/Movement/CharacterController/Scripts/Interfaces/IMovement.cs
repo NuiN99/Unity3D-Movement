@@ -7,7 +7,7 @@ namespace NuiN.Movement
         void Move(Vector2 input, bool isHoldingSprint);
         void Rotate();
         void RotateCamera(Vector2 input);
-        void HoldJump();
-        void PressJump();
+        void GroundJump();
+        void AirJump();
     }
 }

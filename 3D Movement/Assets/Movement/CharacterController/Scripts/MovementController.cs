@@ -8,6 +8,7 @@ namespace NuiN.Movement
     {
         [NonSerialized, ShowInInspector] public bool canMove = true;
         [NonSerialized, ShowInInspector] public bool canRotate = true;
+        [NonSerialized, ShowInInspector] public bool canSprint = true;
 
         [SerializeField] SerializedInterface<IMovement> movement;
         [SerializeField] SerializedInterface<IMovementInput> input;
@@ -20,19 +21,19 @@ namespace NuiN.Movement
 
         void Update()
         {
-            if(canMove && Input.IsHoldingJump) Movement.HoldJump();
+            if(canMove && Input.IsHoldingJump) Movement.GroundJump();
             if(canRotate) Movement.Rotate();
             Movement.RotateCamera(Input.CameraDelta);
         }
 
         void PressJumpHandler()
         {
-            if(canMove) Movement.PressJump();
+            if(canMove) Movement.AirJump();
         }
 
         void FixedUpdate()
         {
-            if(canMove) Movement.Move(Input.MoveDelta, Input.IsHoldingSprint);
+            if(canMove) Movement.Move(Input.MoveDelta, Input.IsHoldingSprint && canSprint);
         }
     }
 }
