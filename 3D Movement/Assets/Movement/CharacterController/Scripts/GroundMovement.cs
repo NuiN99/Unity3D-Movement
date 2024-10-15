@@ -45,9 +45,10 @@ namespace NuiN.Movement
         [ShowInInspector] bool _isJumping;
         [ShowInInspector] int _curAirJumps;
         [ShowInInspector] bool _onInvalidSlope;
+        [ShowInInspector] Vector3 _groundNormal;
 
         Vector3 _direction = Vector3.zero;
-        Vector3 _groundNormal = Vector3.zero;
+        Vector3 _inputDirection = Vector3.zero;
         Vector2 _cameraRotation;
 
         void Start()
@@ -90,8 +91,8 @@ namespace NuiN.Movement
         {
             _isGrounded = disableGroundCheckAfterJumpTimer.IsComplete && IsOnGround();
             
-            Vector3 moveDirection = (cameraTransform.forward * delta.y) + (cameraTransform.right * delta.x).With(y: 0).normalized;
-            _direction = GetGroundAlignedDirection(moveDirection, _groundNormal);
+            _inputDirection = ((cameraTransform.forward * delta.y) + (cameraTransform.right * delta.x)).With(y:0).normalized;
+            _direction = GetGroundAlignedDirection(_inputDirection, _groundNormal);
 
             if (_isGrounded)
             {
@@ -101,8 +102,10 @@ namespace NuiN.Movement
             bool isInputtingDirection = _direction.magnitude > 0;
             if (!isInputtingDirection)
             {
-                if (_isGrounded && !_isJumping && !_onInvalidSlope) rb.drag = groundDrag;
+                if (_isGrounded && !_isJumping) rb.drag = groundDrag;
                 else rb.drag = airDrag;
+
+                if (_isGrounded && _onInvalidSlope) rb.drag = groundDrag;
                 return;
             }
 
@@ -136,6 +139,15 @@ namespace NuiN.Movement
         void IMovement.Rotate()
         {
             float speed = turnSpeed * Time.deltaTime;
+
+            if (_onInvalidSlope)
+            {
+                Vector3 dir = _inputDirection == Vector3.zero ? rb.velocity.With(y: 0) : _inputDirection.With(y: 0);
+                if (dir == Vector3.zero) return;
+                
+                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), speed);
+                return;
+            }
             
             if (!_isGrounded || _groundNormal == Vector3.up)
             {
@@ -210,6 +222,11 @@ namespace NuiN.Movement
                 _groundNormal = hit.normal;
             }
 
+            if (_groundNormal == Vector3.zero)
+            {
+                _groundNormal = Vector3.up;
+            }
+
             if (_groundNormal.y <= maxWalkableWallAngle)
             {
                 _onInvalidSlope = true;
@@ -225,6 +242,22 @@ namespace NuiN.Movement
         
         Vector3 GetGroundAlignedDirection(Vector3 movementDirection, Vector3 groundNormal)
         {
+            Vector3 groundCheckPos = transform.TransformPoint(capsuleCollider.center - new Vector3(0, ((capsuleCollider.height * 0.5f) + groundCheckDist) - capsuleCollider.radius , 0));
+            if (Physics.Raycast(groundCheckPos, movementDirection, out RaycastHit hit, forwardAlignCheckDist, alignMask) && hit.normal.y <= maxWalkableWallAngle)
+            {
+                Vector3 rightDirection = Vector3.Cross(Vector3.up, hit.normal);
+
+                float dot = Vector3.Dot(movementDirection, rightDirection);
+
+                Vector3 slideDirection = Vector3.Cross(hit.normal, -Vector3.up);
+
+                float slideAmount = Mathf.Clamp(dot, -1f, 1f);
+
+                Vector3 finalSlideDirection = slideDirection * slideAmount;
+
+                return finalSlideDirection;
+            }
+            
             if (groundNormal.sqrMagnitude <= float.MinValue || !_isGrounded)
             {
                 return movementDirection;
