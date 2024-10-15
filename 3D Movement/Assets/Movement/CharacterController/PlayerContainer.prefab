@@ -651,7 +651,7 @@ MonoBehaviour:
   maxSpeed: 5
   acceleration: 10
   sprintingMaxSpeedMult: 1.5
-  airControlFactor: 0.25
+  airControlFactor: 0.5
   groundDrag: 7.5
   airDrag: 0.002
   turnSpeed: 12.5

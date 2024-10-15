@@ -47,8 +47,7 @@ namespace NuiN.Movement
         [ShowInInspector] int _curAirJumps;
         [ShowInInspector] bool _onInvalidSlope;
         [ShowInInspector] Vector3 _groundNormal;
-
-        Vector3 _direction = Vector3.zero;
+        [ShowInInspector] Vector3 _direction;
         Vector3 _inputDirection = Vector3.zero;
         Vector2 _cameraRotation;
 
@@ -128,13 +127,18 @@ namespace NuiN.Movement
                 desiredVelocity = desiredVelocity.normalized * speed;
             }
 
+            if (!_isGrounded)
+            {
+                desiredVelocity.y = rb.velocity.y;
+            }
+            
             Vector3 force = (desiredVelocity - rb.velocity) * (acceleration * Time.fixedDeltaTime);
             
             if (!_isGrounded)
             {
                 force *= airControlFactor;
             }
-
+            
             rb.AddForce(force, ForceMode.VelocityChange);
         }
 
